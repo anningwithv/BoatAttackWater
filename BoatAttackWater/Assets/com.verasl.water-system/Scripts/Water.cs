@@ -23,16 +23,22 @@ namespace WaterSystem
                 return _instance;
             }
         }
+
         // Script references
         private PlanarReflections _planarReflections;
 
         private bool _useComputeBuffer;
         public bool computeOverride;
 
-        [SerializeField] RenderTexture _depthTex;
+        [SerializeField]
+        RenderTexture _depthTex;
+
         public Texture bakedDepthTex;
         private Camera _depthCam;
+
+        // Water Color Ramp
         private Texture2D _rampTexture;
+
         [SerializeField]
         public Wave[] _waves;
         [SerializeField]
@@ -40,13 +46,19 @@ namespace WaterSystem
         private float _maxWaveHeight;
         private float _waveHeight;
 
+        // Water的渲染方式设置（GeometryType、ReflectionType）
         [SerializeField]
         public WaterSettingsData settingsData;
+
+        // Water的Wave、Foam参数等设置
         [SerializeField]
         public WaterSurfaceData surfaceData;
+
+        // Water的Map贴图和Mesh配置
         [SerializeField]
         private WaterResources resources;
 
+        #region Shader Id
         private static readonly int CameraRoll = Shader.PropertyToID("_CameraRoll");
         private static readonly int InvViewProjection = Shader.PropertyToID("_InvViewProjection");
         private static readonly int WaterDepthMap = Shader.PropertyToID("_WaterDepthMap");
@@ -61,6 +73,7 @@ namespace WaterSystem
         private static readonly int WaveData = Shader.PropertyToID("waveData");
         private static readonly int AbsorptionScatteringRamp = Shader.PropertyToID("_AbsorptionScatteringRamp");
         private static readonly int DepthCamZParams = Shader.PropertyToID("_VeraslWater_DepthCamParams");
+        #endregion
 
         private void OnEnable()
         {
@@ -85,10 +98,9 @@ namespace WaterSystem
             Cleanup();
         }
 
-        void Cleanup()
+        // 当Disabled的时候清除资源
+        private void Cleanup()
         {
-            //if(Application.isPlaying)
-                //GerstnerWavesJobs.Cleanup();
             RenderPipelineManager.beginCameraRendering -= BeginCameraRendering;
             if (_depthCam)
             {
@@ -149,10 +161,15 @@ namespace WaterSystem
                 DestroyImmediate(o);
         }
 
+        // 初始化
         public void Init()
         {
+            // 根据配置设置波相关参数，并传递给Shader。根据渲染类型，开启或关闭相关参数
             SetWaves();
+
+            // 生成Water的颜色贴图
             GenerateColorRamp();
+
             if (bakedDepthTex)
             {
                 Shader.SetGlobalTexture(WaterDepthMap, bakedDepthTex);
